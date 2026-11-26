@@ -70,20 +70,6 @@ SECTIONS
     . = ALIGN(4);
   }  > FLASH
 
-
-  /* Section for destructors */
-  .dtors : ALIGN(4)
-  {
-    PROVIDE(__DTOR_LIST__  = .);
-    KEEP (*(SORT(.dtors.*)))
-    KEEP (*(.dtors))
-    KEEP (*(SORT(.fini_array.*)))
-    KEEP (*(.fini_array))
-    LONG(-1) ;
-    PROVIDE(__DTOR_END__  = .);
-    . = ALIGN(4);
-  } > FLASH
-
   /* Runtime clear table */
   .clear_sec : ALIGN(4)
   {

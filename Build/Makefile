@@ -32,8 +32,6 @@ FORMAT_LINKER_ERR =
 
 RTOS = 
 
-LOCKDIR := $(OUTPUT_DIR)/err_formatter.lock
-
 ############################################################################################
 # Toolchain
 ############################################################################################
@@ -42,7 +40,9 @@ TOOLCHAIN ?= v850-unknown-elf
 AS      = $(TOOLCHAIN)-gcc
 CC      = $(TOOLCHAIN)-gcc
 CPP     = $(TOOLCHAIN)-g++
+CPPFILT = $(TOOLCHAIN)-c++filt
 LD      = $(TOOLCHAIN)-gcc
+NM      = $(TOOLCHAIN)-nm
 OBJDUMP = $(TOOLCHAIN)-objdump
 OBJCOPY = $(TOOLCHAIN)-objcopy
 SIZE    = $(TOOLCHAIN)-size
@@ -205,25 +205,36 @@ endif
 # Source Files
 ############################################################################################
 
-SRC_FILES := $(SRC_DIR)/Appli/main.c                  \
-             $(SRC_DIR)/Mcal/pll.c                    \
-             $(SRC_DIR)/Mcal/uart.c                   \
-             $(SRC_DIR)/Mcal/wdt.c                    \
-             $(SRC_DIR)/Startup/boot.s                \
-             $(SRC_DIR)/Startup/intvect.s             \
-             $(SRC_DIR)/Startup/Startup.c             \
-             $(SRC_DIR)/StdLib/printf/printf.c        \
-             $(SRC_DIR)/StdLib/StdLib.c
+SRC_FILES := $(SRC_DIR)/Appli/main.cpp                                  \
+             $(SRC_DIR)/Mcal/uart.c                                     \
+             $(SRC_DIR)/Startup/boot.s                                  \
+             $(SRC_DIR)/Startup/intvect.s                               \
+             $(SRC_DIR)/Startup/Startup.c                               \
+             $(SRC_DIR)/StdLib/printf/printf.c                          \
+             $(SRC_DIR)/StdLib/StdLib.c                                 \
+             $(SRC_DIR)/src/mcal/v850es_jg3/mcal_gpt.cpp                \
+             $(SRC_DIR)/src/mcal/v850es_jg3/mcal_led.cpp                \
+             $(SRC_DIR)/src/mcal/v850es_jg3/mcal_osc.cpp                \
+             $(SRC_DIR)/src/mcal/v850es_jg3/mcal_port.cpp               \
+             $(SRC_DIR)/src/mcal/v850es_jg3/mcal_wdg.cpp                \
+             $(SRC_DIR)/src/app/benchmark/app_benchmark.cpp             \
+             $(SRC_DIR)/src/app/led/app_led.cpp                         \
+             $(SRC_DIR)/src/os/os.cpp                                   \
+             $(SRC_DIR)/src/mcal/mcal_gcc_cxx_completion.cpp            \
+             $(SRC_DIR)/src/sys/idle/sys_idle.cpp                       \
+             $(SRC_DIR)/src/sys/mon/sys_mon.cpp
 
 ############################################################################################
 # Include Paths
 ############################################################################################
-INC_FILES := $(SRC_DIR)               \
-             $(SRC_DIR)/Appli         \
-             $(SRC_DIR)/Mcal          \
-             $(SRC_DIR)/Startup       \
-             $(SRC_DIR)/StdLib/printf \
-             $(SRC_DIR)/StdLib
+INC_FILES := $(SRC_DIR)                                       \
+             $(SRC_DIR)/Appli                                 \
+             $(SRC_DIR)/Mcal                                  \
+             $(SRC_DIR)/Startup                               \
+             $(SRC_DIR)/StdLib/printf                         \
+             $(SRC_DIR)/StdLib                                \
+             $(SRC_DIR)/src                                   \
+             $(SRC_DIR)/src/mcal/v850es_jg3
 
 ############################################################################################
 # Rules
@@ -254,8 +265,6 @@ link : $(ELF_FILE)
 .PHONY : PRE_BUILD
 PRE_BUILD:
 	@-echo +++ Building Baremetal V850ES/JG3-L image
-	@git log -n 1 --decorate-refs=refs/heads/ --pretty=format:"+++ Git branch: %D (%h)" 2>/dev/null || true
-	@git log -n 1 --clear-decorations 2> /dev/null > /dev/null || true
 	@echo +++ info: "$(shell $(CC) -v 2>&1 | tail -n 1)"
 	@echo +++ info: "$(shell make -v 2>&1 | head -n 1)"
 	@echo +++ info: "$(shell $(PYTHON) --version 2>&1 | head -n 1)"
@@ -277,42 +286,32 @@ $(OBJ_DIR)/%.c.o : $(SRC_DIR)/%.c
 	@-echo +++ compile: $(subst $(ROOT_DIR)/,,$<)
 	@-mkdir -p $(@D)
 	@-$(CC) $(COPS) $(addprefix -I, $(INC_FILES)) -c $< -o $@ 2>  $(subst .o,.err,$@)
-	@-while ! mkdir $(LOCKDIR) 2>/dev/null; do sleep 0.1; done; $(PYTHON) $(ERR_MSG_FORMATER_SCRIPT) $(subst .o,.err,$@) -COLOR; rmdir $(LOCKDIR)
 
 $(OBJ_DIR)/%.S.o : $(SRC_DIR)/%.S
 	@-echo +++ compile: $(subst $(ROOT_DIR)/,,$<)
 	@-mkdir -p $(@D)
 	@-$(CC) $(OPT) $(ARCH) $(DEFS) $(addprefix -I, $(INC_FILES)) -c $< -o $@ 2> $(subst .o,.err,$@)
-	@-while ! mkdir $(LOCKDIR) 2>/dev/null; do sleep 0.1; done; $(PYTHON) $(ERR_MSG_FORMATER_SCRIPT) $(subst .o,.err,$@) -COLOR; rmdir $(LOCKDIR)
 
 ifeq ($(AS), $(TOOLCHAIN)-as)
 $(OBJ_DIR)/%.s.o : $(SRC_DIR)/%.s
 	@-echo +++ compile: $(subst $(ROOT_DIR)/,,$<)
 	@-mkdir -p $(@D)
 	@$(AS) $(ASOPS) $< -o $@ 2> $(subst .o,.err,$@) > $(subst .o,.lst,$@)
-	@-while ! mkdir $(LOCKDIR) 2>/dev/null; do sleep 0.1; done; $(PYTHON) $(ERR_MSG_FORMATER_SCRIPT) $(subst .o,.err,$@) -COLOR; rmdir $(LOCKDIR)
 else
 $(OBJ_DIR)/%.s.o : $(SRC_DIR)/%.s
 	@-echo +++ compile: $(subst $(ROOT_DIR)/,,$<)
 	@-mkdir -p $(@D)
 	@-$(CC) $(ASOPS) $(addprefix -I, $(INC_FILES)) -c $< -o $@ 2> $(subst .o,.err,$@)
-	@-while ! mkdir $(LOCKDIR) 2>/dev/null; do sleep 0.1; done; $(PYTHON) $(ERR_MSG_FORMATER_SCRIPT) $(subst .o,.err,$@) -COLOR; rmdir $(LOCKDIR)
 endif
 
 $(OBJ_DIR)/%.cpp.o : $(SRC_DIR)/%.cpp
 	@-echo +++ compile: $(subst $(ROOT_DIR)/,,$<)
 	@-mkdir -p $(@D)
 	@$(CPP) $(CPPOPS) $(addprefix -I, $(INC_FILES)) -c $< -o $@ 2> $(subst .o,.err,$@)
-	@-while ! mkdir $(LOCKDIR) 2>/dev/null; do sleep 0.1; done; $(PYTHON) $(ERR_MSG_FORMATER_SCRIPT) $(subst .o,.err,$@) -COLOR; rmdir $(LOCKDIR)
 
 $(ELF_FILE) : $(OBJ_FILES) $(LD_SCRIPT)
 	@-echo +++ link: $(subst \,/,$@)
-ifeq ($(FORMAT_LINKER_ERR), )
 	@$(LD) $(LOPS) $(OBJ_FILES) $(LIB) -o $(ELF_FILE) 2>&1
-else
-	@$(LD) $(LOPS) $(OBJ_FILES) $(LIB) -o $(ELF_FILE) > $(OBJ_DIR)/linker.err 2>&1 || true
-	$(PYTHON) $(LINKER_ERR_MSG_FORMATER_SCRIPT) $(OBJ_DIR)/linker.err
-endif
 
 .PHONY : GENERATE
 GENERATE:
@@ -322,6 +321,8 @@ GENERATE:
 	@-cat $(PRJ_FILE).map >> $(PRJ_FILE).readelf
 	@-echo +++ generate: $(PRJ_FILE).sym
 	@$(READELF) -Ws $(ELF_FILE) >> $(PRJ_FILE).readelf
+	@-echo +++ generate: $(PRJ_FILE)_cppfilt.txt
+	@-$(NM) --numeric-sort --print-size $(ELF_FILE) | $(CPPFILT) > $(PRJ_FILE)_cppfilt.txt
 	@-echo +++ generate: $(PRJ_FILE).dis
 	@$(OBJDUMP) -d --wide $(ELF_FILE) >> $(PRJ_FILE).readelf
 	@-echo +++ generate: $(PRJ_FILE).hex

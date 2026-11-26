@@ -31,14 +31,11 @@ _start:
     st.b r1, 0[r2]
 
     # disable watchdog timer 2
-    jarl _wdt_disable, lp
+    jarl _wdg_init, lp
 
     # setup the stack pointer
     movhi hi(__STACK_TOP), r0, sp
     movea lo(__STACK_TOP), sp, sp
-
-    # enable interrupt
-    ei
 
     # call C/C++ runtime initialization
     jr _Startup_Init
