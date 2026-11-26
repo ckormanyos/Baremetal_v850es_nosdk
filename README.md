@@ -1,6 +1,4 @@
-# Bare Metal V850ES/JG3-L Project
-
-[![Build Status](https://github.com/Chalandi/Baremetal_v850es_nosdk/actions/workflows/Baremetal_v850es_nosdk.yml/badge.svg)](https://github.com/Chalandi/Baremetal_v850es_nosdk/actions)
+# Bare Metal V850ES/JG3-L Project: Adaption ckormanyos ref_app
 
 This repository contains a bare-metal firmware project for the Renesas V850ES/JG3-L family, targeting the μPD70F3793 microcontroller. The project is designed to provide a clean and educational starting point for embedded software development without relying on Renesas’ proprietary SDK.
 
