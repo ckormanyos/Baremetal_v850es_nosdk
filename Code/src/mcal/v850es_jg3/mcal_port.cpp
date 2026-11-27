@@ -7,14 +7,9 @@
 
 #include <mcal_port.h>
 
-#include <cstdint>
-
-#define PM3L (*(volatile uint8_t*)(0xFFFFF426ul))
-#define P3L  (*(volatile uint8_t*)(0xFFFFF406ul))
-
 auto mcal::port::init(const config_type*) -> void
 {
   /* set P36 as output low (LED ON) */
-  PM3L &= (uint8_t)~(1u << 6);
-  P3L  &= (uint8_t)~(1u << 6);
+  // P3L  &= (uint8_t)~(1u << 6);
+  // PM3L &= (uint8_t)~(1u << 6);
 }

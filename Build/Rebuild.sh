@@ -1,12 +1,4 @@
 #!/bin/bash
-#
-# Get and extract the compiler.
-# cd /mnt/c/Users/ckorm/Documents/Ks/uC_Software/Boards/chalandi/Baremetal_v850es_nosdk/Build/tools
-# tar -xf gcc-16.2.0-v850-unknown-elf.tar.gz
-#
-# Add the compiler path.
-# cd /mnt/c/Users/ckorm/Documents/Ks/uC_Software/Boards/chalandi/Baremetal_v850es_nosdk/Build
-# export PATH="$PATH:/mnt/c/Users/ckorm/Documents/Ks/uC_Software/Boards/chalandi/Baremetal_v850es_nosdk/Build/tools/gcc-16.2.0-v850-unknown-elf/bin"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

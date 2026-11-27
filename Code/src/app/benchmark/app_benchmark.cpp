@@ -5,7 +5,13 @@
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <app/benchmark/app_benchmark.h>
+namespace app { namespace benchmark { // NOLINT(modernize-concat-nested-namespaces)
+
+void task_init();
+void task_func();
+
+} // namespace benchmark
+} // namespace app
 
 auto app::benchmark::task_init() -> void
 {
